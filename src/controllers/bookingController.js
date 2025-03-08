@@ -1,5 +1,7 @@
+const { log } = require('winston');
 const BookingService = require('../services/bookingService');
 const bookingService = new BookingService();
+const logger = require('../utils/logger');
 
 exports.createBooking = async (req, res) => {
   try {    
@@ -9,8 +11,9 @@ exports.createBooking = async (req, res) => {
       data: booking,
       message: 'Booking created successfully'
     });
+    logger.info(`Booking created successfully for user ${booking.userId} with booking ID ${booking.id}`);
   } catch (error) {
-    console.error('Error creating booking:', error.message);    
+    logger.error(`Error creating booking: ${error.message}`); 
     res.status(500).json({
       success: false,
       message: 'Could not create booking',
@@ -21,10 +24,7 @@ exports.createBooking = async (req, res) => {
 
 exports.getBookingsByUser = async (req, res) => {
   try {
-    console.log(`controller is hit at getBookingsByUser`);
-    const userId = req.query.userId;
-    console.log(`userId from the Req is ${userId}`);
-    
+    const userId = req.query.userId;    
     if(!userId){
       throw new Error('User id is missing from query params');
     }
@@ -34,7 +34,9 @@ exports.getBookingsByUser = async (req, res) => {
       data: bookings,
       message: 'Bookings fetched successfully'
     });
+    logger.info(`Bookings fetched successfully for user ${userId}`);
   } catch (error) {
+    logger.error(`Error fetching bookings: ${error.message}`);
     res.status(500).json({
       success: false,
       message: 'Could not fetch bookings',
@@ -47,13 +49,13 @@ exports.getBookingById = async (req, res) => {
   try {
     const bookingId = req.params.id;
     if(!bookingId){
-        throw new Error('Booking ID is invalid no flight with the given booking Id')
-    }
-    console.log(bookingId);
-         
+      logger.error('Booking ID is invalid no flight with the given booking Id');
+      throw new Error('Booking ID is invalid no flight with the given booking Id')
+    }         
     const booking = await bookingService.findById(bookingId);
-
+    
     if(!booking){
+      logger.error(`No Booking found for the given Booking ID ${bookingId}`);
       return res.status(404).json({
         success : false,
         data : booking,
@@ -61,14 +63,14 @@ exports.getBookingById = async (req, res) => {
       })
     }
 
-
-
     res.status(200).json({
       success: true,
       data: booking,
       message: 'Booking fetched successfully'
     });
+    logger.info(`Booking fetched successfully for booking ID ${bookingId}`);
   } catch (error) {
+    logger.error(`Error fetching booking: ${error.message}`);
     res.status(500).json({
       success: false,
       message: 'Could not fetch booking',
@@ -84,12 +86,13 @@ exports.cancelBooking = async (req, res) => {
     console.log(email);
     
     if(!bookingId){
+      logger.error(`Booking ID is invalid no flight with the given booking Id  ${bookingId}`);
         throw new Error('Booking ID is invalid no flight with the given booking Id')
     }
     const booking = await bookingService.findById(bookingId);
 
     if(!booking){
-      //throw new Error('there does not exist any booking with that Id');
+      logger.error(`No Booking found for the given Booking ID ${bookingId}`);
       return res.status(404).json({
         success: false,
         data : booking,
@@ -100,7 +103,7 @@ exports.cancelBooking = async (req, res) => {
     console.log(booking);
     
     if(booking.email !== email){
-      //throw new Error('there does not exist any booking with that Id');
+      logger.warn(`Please provide correct email id associated with Booking ID ${bookingId}`);
       return res.status(404).json({
         success: false,
         data : {},
@@ -113,7 +116,9 @@ exports.cancelBooking = async (req, res) => {
       data : booking,
       message: `Booking cancelled successfully for Booking Id ${booking.bookingId}`
     });
+    logger.info(`Booking cancelled successfully for Booking Id ${booking.bookingId}`);
   } catch (error) {
+    logger.error(`Error cancelling booking: ${error.message}`);
     res.status(500).json({
       success: false,
       message: 'Could not cancel booking',

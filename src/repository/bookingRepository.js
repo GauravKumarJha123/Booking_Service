@@ -1,11 +1,13 @@
 const { Booking, sequelize  } = require('../models');
 const { Op } = require('sequelize');
+const logger = require('../utils/logger');
 
 class BookingRepository {
   async create(data) {
     return await Booking.create(data);
   }
-
+// in the logger for this files method go with sql query that feels relevant give suggestion based on that 
+// so that we can log that in logger
   async update(bookingId, data) {
     const booking = await Booking.findByPk(bookingId);
     if (booking) {
